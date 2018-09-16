@@ -25,7 +25,6 @@ Example usage:
 
 ```lua
 local packages = 0
-local continueReading = true
 
 mt:sendSentence({ '/system/package/print' }, function(res)
     if res.type == '!re' then
@@ -33,11 +32,10 @@ mt:sendSentence({ '/system/package/print' }, function(res)
         packages = packages + 1
     elseif res.type == '!done' then
         print("Number of packages: " .. packages)
-        continueReading = false
     end
 end)
 
-while continueReading and mt:readEverySentence() do end
+mt:wait()
 ```
 
 ### `mt:readSentence()`
