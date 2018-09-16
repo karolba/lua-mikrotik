@@ -8,28 +8,57 @@ A lightweight lua library for talking to the [Mikrotik RouterOS API](https://wik
 * Either the [kikito's md5 library](https://github.com/kikito/md5.lua) or the [keplerproject's md5 library](https://github.com/keplerproject/md5)
 * On older Lua versions with no `bit32` (`<= 5.1`), either [BitOp](http://luaforge.net/projects/bit/), or [BitLib](https://github.com/LuaDist/bitlib)
 
+## Documentation
+
+For documentation see [doc/api.md](https://github.com/karolba/lua-mikrotik/doc/api.md).
+
 ## Examples
 
-Starting a RouterOS script from `/system/script` by name:
+Starting a RouterOS script from `/system/script` by name synchronously:
 
 ```lua
 local Mikrotik = require 'Mikrotik'
 
 local function runScript(mt, scriptname)
     assert(mt:sendSentence({ '/system/script/print', '?name=' .. scriptname, '=.proplist=.id' }))
+
     local message = assert(mt:readSentence())
     assert(message.type == '!re')
     assert(mt:readSentence().type == '!done')
 
-    local runTag = mt:nextTag()
-    assert(mt:sendSentence({ '/system/script/run', '=number=' .. message['=.id'], '.tag=' .. runTag}))
-    local scriptResult = assert(mt:readSentence())
-    assert(scriptResult.type == '!done')
-    assert(scriptResult['.tag'] == runTag)
+    assert(mt:sendSentence({ '/system/script/run', '=number=' .. message['=.id']}))
+    assert(mt:readSentence().type == '!done')
+
+    print('OK!')
 end
 
-local mt = assert(Mikrotik:create('192.168.88.1', 8728))
+local mt = assert(Mikrotik:create('192.168.88.1'))
 assert(mt:login('login', 'password'), 'Failed login')
 
 runScript(mt, 'routeros-script-name')
+```
+
+The same result can be accomplished by using "tagged sentences" and callbacks:
+
+```lua
+local Mikrotik = require 'Mikrotik'
+
+local function runScript(mt, scriptname)
+    assert(mt:sendSentence({ '/system/script/print', '?name=' .. scriptname, '=.proplist=.id' }, function(res)
+        if res.type == '!re' then
+            assert(mt:sendSentence({ '/system/script/run', '=number=' .. res['=.id'] }, function(res)
+                if res.type == '!done' then
+                    print('OK!')
+                end
+            end))
+        end
+    end))
+end
+
+local mt = assert(Mikrotik:create('192.168.88.1'))
+assert(mt:login('login', 'password'), 'Failed login')
+
+runScript(mt, 'what')
+
+assert(mt:wait())
 ```

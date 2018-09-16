@@ -10,6 +10,11 @@ local lrotate, rrotate = bit32.lrotate or bit32.lshift, bit32.rrotate or bit32.r
 local socket = require('socket')
 local md5 = require('md5')
 
+local DEFAULT_PORT = 8728
+
+local function table_empty(t)
+    return next(t) == nil
+end
 
 local function byte(int, byteIdx)
     local shifted = rrotate(int, 8 * byteIdx)
@@ -97,10 +102,14 @@ function Mikrotik:create(address, port, timeout)
     if timeout then
         client:settimeout(timeout)
     end
-    assert(client:connect(address, port), 'Could not connect')
+    if not client:connect(address, port or DEFAULT_PORT) then
+        return nil
+    end
 
     mtk.client = client
-    mtk.nextSentenceTag = 1
+    mtk.nextSentenceTagId = 0
+    mtk.tagToCallbackTable = {}
+    mtk.debug = false
 
     return mtk
 end
@@ -143,11 +152,51 @@ function Mikrotik:readLen()
     end
 end
 
-function Mikrotik:sendSentence(sentence) 
+-- Gets a tag from a message going to be sent
+local function getTag(sentence)
+    local function starts_with(str, start)
+        return str:sub(1, #start) == start
+    end
+
+    local TAG_PREFIX = '.tag='
+
+    for i, word in ipairs(sentence) do
+        if starts_with(word, TAG_PREFIX) then
+            return word:sub(#TAG_PREFIX + 1)
+        end
+    end
+
+    return nil
+end
+
+function Mikrotik:sendSentence(sentence, callback) 
+    if self.debug then
+        for k, v in ipairs(sentence) do
+            print(">>>>>>", v)
+        end
+    end
     local message = ""
     for i, word in ipairs(sentence) do
         message = message .. encodeWord(word)
     end
+
+    if callback then
+        local tag = getTag(sentence)
+        if not tag then
+            tag = self:nextTag()
+            message = message .. encodeWord('.tag=' .. tag)
+            if self.debug then
+                print(">>>>>> (added by sendSentence) ", '.tag=' .. tag)
+            end
+        end
+
+        self.tagToCallbackTable[tag] = callback
+    end
+
+    if self.debug then
+        print(">>>>>>")
+    end
+    -- The closing empty word - essentialy a null byte
     message = message .. '\0'
     return self:send(message)
 end
@@ -160,11 +209,17 @@ function Mikrotik:readWord()
     return self.client:receive(len)
 end
 
-function Mikrotik:readSentence()
+function Mikrotik:readSentenceBypassingCallbacks()
     local sentence = {}
     while true do
         local word = self:readWord()
         if not word then
+            if self.debug then
+                for k, v in pairs(sentence) do
+                    print("<<<<<<", k, v)
+                end
+                print("<<<<<<")
+            end
             return sentence
         end
 
@@ -173,6 +228,53 @@ function Mikrotik:readSentence()
     end
 end
 
+function Mikrotik:handleCallback(sentence)
+    local tag = sentence['.tag']
+    if not tag then
+        return false
+    end
+
+    local callback = self.tagToCallbackTable[tag]
+    if not callback then
+        return false
+    end
+
+    callback(sentence)
+
+    local type = sentence.type
+    if type == '!done' or type == '!trap' then
+        self.tagToCallbackTable[tag] = nil
+    end
+
+    return true
+end
+
+function Mikrotik:readSentence()
+    if self.queuedSentence then
+        self.queuedSentence = nil
+        return self.queuedSentence
+    end
+    local sentence
+    repeat 
+        sentence = self:readSentenceBypassingCallbacks()
+    until not self:handleCallback(sentence) or table_empty(self.tagToCallbackTable)
+    return sentence
+end
+
+function Mikrotik:send(message)
+    return self.client:send(message)
+end
+
+function Mikrotik:wait()
+    local sentence = self:readSentence()
+    self.queuedSentence = sentence
+    return sentence
+end
+
+function Mikrotik:nextTag()
+    self.nextSentenceTagId = self.nextSentenceTagId + 1
+    return "lua-mtk-" .. self.nextSentenceTagId
+end
 
 function Mikrotik:login(user, pass)
     self:sendSentence({ "/login" })
@@ -190,20 +292,11 @@ function Mikrotik:login(user, pass)
  
     local challangeResponse = self:readSentence()
     if not challangeResponse or challangeResponse.type ~= '!done' then
-        -- Probably a connection error or bad credentials
+        -- Bad credentials?
         return nil
     end
 
     return true
-end
-
-function Mikrotik:send(message)
-    return self.client:send(message)
-end
-
-function Mikrotik:nextTag()
-    self.nextSentenceTag = self.nextSentenceTag + 1
-    return tostring(self.nextSentenceTag)
 end
 
 return Mikrotik
