@@ -10,7 +10,7 @@ A lightweight lua library for talking to the [Mikrotik RouterOS API](https://wik
 
 ## Documentation
 
-For documentation see [doc/api.md](https://github.com/karolba/lua-mikrotik/doc/api.md).
+For documentation see [doc/api.md](https://github.com/karolba/lua-mikrotik/blob/master/doc/api.md).
 
 ## Examples
 
