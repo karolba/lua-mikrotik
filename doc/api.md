@@ -71,4 +71,4 @@ ready to be read by `mt:readSentence()` and `nil` on failure.
 
 ### `mt.debug = <true/false>`
 
-Whether to true displays all communication with the endpoint on stdout
+Whether to display all communication with the endpoint on stdout
