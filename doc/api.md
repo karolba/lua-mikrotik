@@ -18,7 +18,7 @@ or `nil` on failure.
 
 If the optional `callback` parameter is provided, the sentence will be assigned a unique tag,
 and every received response with the same tag will be passed to the callback, instead of being
-returned from `mt:readSentence()`. Note that for this to work `mt:readSentence()` or `mt:eventLoop()`
+returned from `mt:readSentence()`. Note that for this to work `mt:readSentence()` or `mt:wait()`
 has to be called, as this library is not asynchronous.
 
 Example usage:
