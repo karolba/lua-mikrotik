@@ -16,6 +16,6 @@ dependencies = {
 build = {
    type = "builtin",
    modules = {
-      ["lua-mikrotik"] = "Mikrotik.lua"
+      Mikrotik = "Mikrotik.lua"
    }
 }
