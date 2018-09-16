@@ -35,7 +35,7 @@ end
 local mt = assert(Mikrotik:create('192.168.88.1'))
 assert(mt:login('login', 'password'), 'Failed login')
 
-runScript(mt, 'routeros-script-name')
+runScript(mt, 'example-routeros-script-name')
 ```
 
 The same result can be accomplished by using "tagged sentences" and callbacks:
@@ -58,7 +58,7 @@ end
 local mt = assert(Mikrotik:create('192.168.88.1'))
 assert(mt:login('login', 'password'), 'Failed login')
 
-runScript(mt, 'what')
+runScript(mt, 'example-routeros-script-name')
 
 assert(mt:wait())
 ```
