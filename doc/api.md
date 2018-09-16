@@ -1,6 +1,6 @@
 ### `Mikrotik:create(<ip>, [port], [timeout])`
 
-Connect to the given `ip` address and `port`. The optional `timeout` parameter tells
+Connects to the given `ip` address and `port`. The optional `timeout` parameter tells
 `luasocket` how long to wait on reads in seconds.  Creates a `mt` object, returns `nil` on connection failures.
 
 If `port` is unspecified, the default value of `8728` is used.
@@ -71,4 +71,4 @@ ready to be read by `mt:readSentence()` and `nil` on failure.
 
 ### `mt.debug = <true/false>`
 
-When set to true displays all communication with the endpoint on stdout
+Whether to true displays all communication with the endpoint on stdout
