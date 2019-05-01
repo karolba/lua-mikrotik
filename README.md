@@ -4,9 +4,11 @@ A lightweight lua library for talking to the [Mikrotik RouterOS API](https://wik
 
 ## Requirements: 
 
-* [luasocket](https://github.com/diegonehab/luasocket)
-* Either the [kikito's md5 library](https://github.com/kikito/md5.lua) or the [keplerproject's md5 library](https://github.com/keplerproject/md5)
-* On older Lua versions with no `bit32` (`<= 5.1`), either [BitOp](http://luaforge.net/projects/bit/), or [BitLib](https://github.com/LuaDist/bitlib)
+* Either:
+	* [luasocket](https://github.com/diegonehab/luasocket)
+	* Either the [kikito's md5 library](https://github.com/kikito/md5.lua) or the [keplerproject's md5 library](https://github.com/keplerproject/md5)
+	* On older Lua versions with no `bit32` (`<= 5.1`), either [BitOp](http://luaforge.net/projects/bit/), or [BitLib](https://github.com/LuaDist/bitlib)
+* or [OpenResty](https://openresty.org/en/), which contains all these dependencies.
 
 ## Documentation:
 
