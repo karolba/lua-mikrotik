@@ -7,8 +7,12 @@ end
 local bnot, band, bor = bit32.bnot, bit32.band, bit32.bor
 local lrotate, rrotate = bit32.lrotate or bit32.lshift, bit32.rrotate or bit32.rshift
 
-local socket = require('socket')
-local md5 = require('md5')
+-- openresty?
+local has_ngx, ngx = pcall(require, 'ngx')
+
+local socket = (has_ngx and ngx.socket) or require('socket') 
+local md5 = (has_ngx and ngx.md5) or require('md5')
+
 
 local DEFAULT_PORT = 8728
 
@@ -28,7 +32,10 @@ local function hextostring(str)
 end
 
 local function md5sumhex(str)
-    if md5.sumhexa then
+    if type(md5) == 'function' then
+        -- Openresty md5
+        return md5(str)
+    elseif md5.sumhexa then
         -- MD5
         return md5.sumhexa(str)
     elseif md5.new and md5.tohex then
