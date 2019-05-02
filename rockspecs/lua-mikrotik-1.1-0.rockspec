@@ -1,7 +1,8 @@
 package = "lua-mikrotik"
-version = "1.0-0"
+version = "1.1-0"
 source = {
-   url = "https://github.com/karolba/lua-mikrotik"
+   url = "git://github.com/karolba/lua-mikrotik",
+   tag = "v1.1-0"
 }
 description = {
    summary = "A lightweight library for communicating with the Mikrotik RouterOS API",
